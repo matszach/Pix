@@ -1,0 +1,45 @@
+<link rel="stylesheet" href="styles.css">
+<script src='pix.js'></script>
+<div id='c-home'></div>
+<script>
+
+    const pix = new Pix('c-home', {});
+
+    pix.initImageData();
+    
+    pix.clear(255, 0, 0);
+    pix.fill(0, 255, 0, 100);
+
+    pix.putPixel(10, 10, 0, 0, 255, 255);
+    console.log(pix.getPixel(10, 10));
+    
+    pix.putRectangle(100, 100, 200, 200, 0, 0, 255, 255);
+
+    const rect = [200, 200, 200, 200];
+    const green = [0, 255, 0, 125];
+    pix.putRectangle(...rect, ...green);
+    pix.putBox(...rect, 10, 0, 0, 0, 225);
+
+    const circle = [350, 350, 100]
+    pix.putCircle(...circle, 0, 255, 255, 125);
+    pix.putRing(...circle, 10, 255, 255, 0, 175);
+
+    const black = [30, 30, 30, 200];
+    for(let i = 0; i < 20; i++) {
+        pix.putLine(700, 400, 800, 100 + 30 * i, 5, ...black);
+        pix.putLine(700, 400, 600, 100 + 30 * i, 5, ...black);
+        pix.putLine(700, 400, 400 + 30 * i, 300, 5, ...black);
+        pix.putLine(700, 400, 400 + 30 * i, 500, 5, ...black);
+    }
+
+    pix.putPolyline([
+        300, 300,
+        500, 400, 
+        600, 200,
+        500, 600,
+        900, 600
+    ], 10, 255, 0, 0, 120)
+
+    pix.displayImageData();
+    
+</script>
