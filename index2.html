@@ -1,0 +1,19 @@
+<link rel="stylesheet" href="styles.css">
+<script src='pix.js'></script>
+<div id='c-home'></div>
+<script>
+
+    const pix = new Pix('c-home', {});
+    const points = [];
+    setInterval(() => {
+        pix.initImageData();
+        pix.clear(20, 20, 20);
+        points.push(Math.random() * 1000);
+        points.push(Math.random() * 1000);
+        pix.putPolyline(points, 10, 255, 0, 0, 120);
+        pix.displayImageData();
+    }, 1);
+
+
+    
+</script>

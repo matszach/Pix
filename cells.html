@@ -1,0 +1,251 @@
+<link rel="stylesheet" href="styles.css">
+<script src='pix.js'></script>
+<div id='c-home'></div>
+<script>
+
+
+    // MODEL
+    function rng(min, max) {
+        return Math.random() * (max - min) + min; 
+    }
+
+    function chance(v) {
+        return Math.random() < v;
+    }
+
+    class Entity {
+        constructor(x, y, radius, r, g, b, a) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = a;
+            this.dead = false;
+        }
+        place(x, y) {
+            this.x = x;
+            this.y = y;
+        }
+        move(x, y) {
+            this.x += x;
+            this.y += y;
+        }
+        act(plants, herbivores, carnivores) {
+            // abstract
+        }
+        child(type) {
+            return new type(
+                this.x + rng(-15, 15),
+                this.y + rng(-15, 15)
+            );
+        }
+        die() {
+            this.dead = true;
+        }
+    }
+
+    class Plant extends Entity {
+        constructor(x, y) {
+            super(x, y, rng(2, 5),
+                rng(0, 50), rng(150, 250), rng(0, 50), rng(50, 120));
+        }
+        act(plants, herbivores, carnivores) {
+            if(this.radius < 10) {
+                this.radius += 0.01;
+            } else if(chance(0.0002)) {
+                this.die();
+            } else if(chance(0.005)) {
+                plants.push(this.child(Plant));
+            }
+        }
+    }
+
+    class Cell extends Entity {
+        constructor(x, y, radius, r, g, b, a, speed) {
+            super(x, y, radius, r, g, b, a, speed);
+            this.speed = speed;
+            this.target = null;
+        }
+        distance(entity) {
+            return Math.sqrt(
+                (this.x - entity.x)**2 + 
+                (this.y - entity.y)**2
+            );
+        }
+        closest(entities) {
+            let t = null;
+            let dist = 999999;
+            for(let i = 0; i < entities.length; i++) {
+                let e = entities[i];
+                if(e.dead) {
+                    return;
+                }
+                let newDist = this.distance(e);
+                if(newDist < dist) {
+                    dist = newDist;
+                    t = e;
+                }
+            }
+            return t;
+        }
+        find(entities) {
+            if(!this.target || chance(0.01)) {
+                this.target = this.closest(entities);
+            }
+        }
+        chase() {
+            let distX = this.target.x - this.x;
+            let distY = this.target.y - this.y;
+            let tX = false;
+            let tY = false
+            if(Math.abs(distX) < this.speed) {
+                this.x = this.target.x;
+                tX = true;
+            } else if(distX < 0) {
+                this.x -= this.speed;
+            } else {
+                this.x += this.speed;
+            }
+            if(Math.abs(distY) < this.speed) {
+                this.y = this.target.y;
+                tY = true;
+            } else if(distY < 0) {
+                this.y -= this.speed;
+            } else {
+                this.y += this.speed;
+            }
+            return tX && tY;
+        }
+        consume() {
+            if(this.canConsume() && !this.target.dead) {
+                this.onConsume(this.target);
+                this.target.die();
+            }
+            this.target = null;
+        }
+        canConsume() {
+            // abstract
+        }
+        onConsume(target) {
+            // abstract
+        }
+    }
+
+    class Herbivore extends Cell {
+        constructor(x, y) {
+            super(x, y, rng(5, 10),
+                rng(0, 50), rng(0, 50), rng(150, 250), rng(120, 180), rng(0.3, 0.5)
+            );
+        } 
+        act(plants, herbivores, carnivores) {
+            this.radius -= 0.001;
+            if(this.radius < 2) {
+                this.die();
+            } else {
+                this.find(plants);
+                if(this.target && this.chase()) {
+                    this.consume();
+                }
+                if(this.radius > 5 && chance(0.001)) {
+                    herbivores.push(this.child(Herbivore));
+                }
+
+            } 
+        }
+        canConsume() {
+            return this.radius < 18;
+        }
+        onConsume(plant) {
+            this.radius += plant.radius/5;
+            if(this.radius > 20) {
+                this.radius = 20;
+            }
+        }
+    }
+
+    class Carnivore extends Cell {
+        constructor(x, y) {
+            super(x, y, rng(7, 13),
+                rng(150, 250), rng(0, 50), rng(0, 50), rng(120, 180), rng(0.6, 0.9)
+            );
+        } 
+        act(plants, herbivores, carnivores) {
+            this.radius -= 0.002;
+            if(this.radius < 3) {
+                this.die();
+            } else {
+                this.find(herbivores);
+                if(this.target && this.chase()) {
+                    this.consume();
+                }
+                if(this.radius > 7 && chance(0.0003)) {
+                    carnivores.push(this.child(Carnivore));
+                }
+            } 
+        }
+        canConsume() {
+            return this.radius < 27;
+        }
+        onConsume(herbivore) {
+            this.radius += herbivore.radius/2;
+            if(this.radius > 30) {
+                this.radius = 30;
+            }
+        }
+    }
+
+
+
+  
+
+    // SETUP
+    const pix = new Pix('c-home', {alphaBlend: false});
+
+    function make(type) {
+        const x = rng(0, pix.width());
+        const y = rng(0, pix.height());
+        return new type(x, y);
+    }
+
+    let plants = [];
+    let herbivores = [];
+    let carnivores = [];
+    
+    function doFrame(e) {
+        if(!e.dead) {
+            e.act(plants, herbivores, carnivores);
+            pix.putCircle(e.x, e.y, e.radius, e.r, e.g, e.b, e.a);
+        }
+    }
+
+    for(let i = 0; i < 200; i++) {
+        plants.push(make(Plant));
+    }
+
+    for(let i = 0; i < 20; i++) {
+        herbivores.push(make(Herbivore));
+    }
+
+    for(let i = 0; i < 2; i++) {
+        carnivores.push(make(Carnivore));
+    }
+
+    setInterval(() => {
+        pix.initImageData();
+        plants.forEach(e => doFrame(e));
+        herbivores.forEach(e => doFrame(e));
+        carnivores.forEach(e => doFrame(e));
+        plants = plants.filter(e => !e.dead);
+        herbivores = herbivores.filter(e => !e.dead);
+        carnivores = carnivores.filter(e => !e.dead);
+        pix.displayImageData();
+    }, 1);
+
+    
+
+    
+
+    
+</script>

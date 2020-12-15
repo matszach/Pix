@@ -27,11 +27,11 @@ class Pix {
         this.scale = args.scale || 1;
         this.offsetX = args.offsetX || 0;
         this.offsetY = args.offsetY || 0;
-        this.alphaBlend = args.alphaBlend === false ? false : true;
+        this._alphaBlend = args.alphaBlend === false ? false : true;
     }
 
     _initAlphaBlend() {
-        if(this.alphaBlend) {
+        if(this._alphaBlend) {
             this.enableAlphaBlend();
         } else {
             this.disableAlphaBlend();
@@ -74,7 +74,7 @@ class Pix {
 
     // ================================ CONFIG METHODS ===============================
     disableAlphaBlend() {
-        this.alphaBlend = false;
+        this._alphaBlend = false;
         this._blendPixelData = (i, r, g, b, a) => {
             this.imageDataArray[i] = r;
             this.imageDataArray[i + 1] = g;
@@ -84,7 +84,7 @@ class Pix {
     }
     
     enableAlphaBlend() {
-        this.alphaBlend = true;
+        this._alphaBlend = true;
         this._blendPixelData = (i, r, g, b, a) => {
             const blend = a / 255;
             const oBlend = (1 - blend);
@@ -93,6 +93,10 @@ class Pix {
             this.imageDataArray[i + 2] = Math.round(b * blend + this.imageDataArray[i + 2] * oBlend);
         };
         return this;
+    }
+
+    isAlphaBlend() {
+        return this._alphaBlend;
     }
 
     enableRefitOnResize() {
@@ -141,6 +145,8 @@ class Pix {
     }
 
     putRectangle(x, y, width, height, r, g, b, a) {
+        x = Math.round(x);
+        y = Math.round(y);
         for(let xi = x; xi < x + width; xi++) {
             for(let yi = y; yi < y + height; yi++) {
                 this.putPixel(xi, yi, r, g, b, a);
@@ -149,7 +155,10 @@ class Pix {
     }
 
     putBox(x, y, width, height, thickness, r, g, b, a) {
-        const hThick = thickness/2;
+        x = Math.round(x);
+        y = Math.round(y);
+        thickness = Math.round(thickness);
+        const hThick = Math.round(thickness/2);
         this.putRectangle(x - hThick, y - hThick, width + thickness, thickness, r, g, b, a);
         this.putRectangle(x - hThick, y + hThick, thickness, height - thickness, r, g, b, a);
         this.putRectangle(x - hThick + width, y + hThick, thickness, height - thickness, r, g, b, a);
@@ -157,6 +166,9 @@ class Pix {
     }
 
     putCircle(x, y, radius, r, g, b, a) {
+        x = Math.round(x);
+        y = Math.round(y);
+        radius = Math.round(radius);
         for(let xi = x - radius; xi < x + radius + 1; xi++) {
             for(let yi = y - radius; yi < y + radius + 1; yi++) {
                 if((x - xi)**2 + (y - yi)**2 < radius**2) {
@@ -167,6 +179,10 @@ class Pix {
     }
     
     putRing(x, y, radius, thickness, r, g, b, a) {
+        x = Math.round(x);
+        y = Math.round(y);
+        radius = Math.round(radius);
+        thickness = Math.round(thickness);
         const radIn = radius - thickness/2;
         const radOut = radius + thickness/2;
         for(let xi = x - radOut; xi < x + radOut + 1; xi++) {
@@ -180,6 +196,11 @@ class Pix {
     }
 
     putLine(x1, y1, x2, y2, thickness, r, g, b, a) {
+        x1 = Math.round(x1);
+        y1 = Math.round(y1);
+        x2 = Math.round(x2);
+        y2 = Math.round(y2);
+        thickness = Math.round(thickness);
         const absX = Math.abs(x1 - x2);
         const absY = Math.abs(y1 - y2);
         if(absX > absY) {
