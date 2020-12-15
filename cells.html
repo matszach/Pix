@@ -56,7 +56,7 @@
                 this.radius += 0.01;
             } else if(chance(0.0002)) {
                 this.die();
-            } else if(chance(0.005)) {
+            } else if(chance(0.003)) {
                 plants.push(this.child(Plant));
             }
         }
@@ -77,6 +77,9 @@
         closest(entities) {
             let t = null;
             let dist = 999999;
+            if(chance(0.1)) {
+                return entities[Math.floor(Math.random() * entities.length)];
+            }
             for(let i = 0; i < entities.length; i++) {
                 let e = entities[i];
                 if(e.dead) {
@@ -91,7 +94,7 @@
             return t;
         }
         find(entities) {
-            if(!this.target || chance(0.01)) {
+            if(!this.target || this.target.dead || chance(0.001)) {
                 this.target = this.closest(entities);
             }
         }
@@ -136,11 +139,11 @@
     class Herbivore extends Cell {
         constructor(x, y) {
             super(x, y, rng(5, 10),
-                rng(0, 50), rng(0, 50), rng(150, 250), rng(120, 180), rng(0.3, 0.5)
+                rng(0, 50), rng(0, 50), rng(150, 250), rng(120, 180), rng(0.5, 0.7)
             );
         } 
         act(plants, herbivores, carnivores) {
-            this.radius -= 0.001;
+            this.radius -= 0.005;
             if(this.radius < 2) {
                 this.die();
             } else {
@@ -150,6 +153,7 @@
                 }
                 if(this.radius > 5 && chance(0.001)) {
                     herbivores.push(this.child(Herbivore));
+                    this.radius -= 2;
                 }
 
             } 
@@ -172,7 +176,7 @@
             );
         } 
         act(plants, herbivores, carnivores) {
-            this.radius -= 0.002;
+            this.radius -= 0.01;
             if(this.radius < 3) {
                 this.die();
             } else {
@@ -180,8 +184,9 @@
                 if(this.target && this.chase()) {
                     this.consume();
                 }
-                if(this.radius > 7 && chance(0.0003)) {
+                if(this.radius > 7 && chance(0.0005)) {
                     carnivores.push(this.child(Carnivore));
+                    this.radius -= 3;
                 }
             } 
         }
