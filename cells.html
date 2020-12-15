@@ -245,6 +245,9 @@
         plants = plants.filter(e => !e.dead);
         herbivores = herbivores.filter(e => !e.dead);
         carnivores = carnivores.filter(e => !e.dead);
+        if(chance(0.02)) {
+            plants.push(make(Plant));
+        }            
         pix.displayImageData();
     }, 1);
 
